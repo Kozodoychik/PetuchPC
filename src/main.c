@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 
 	load_rom(state, rom_file);
 
-	memory_init(state, PETUCHPC_DEFAULT_INSTR_PTR, PETUCHPC_ROM_SIZE);
+	memory_init(state, PETUCHPC_ROM_BASE, PETUCHPC_ROM_SIZE);
 
 	cpu_execute(state);
 	/*SDL_Window* win;

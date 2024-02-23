@@ -11,9 +11,9 @@ void cpu_init(cpu_state* state)
 	for (int i=0;i<PETUCHPC_RAM_SIZE;i++) state->ram[i] = 0;
 	for (int i=0;i<PETUCHPC_ROM_SIZE;i++) state->rom[i] = 0;
 
-	state->ip = PETUCHPC_DEFAULT_INSTR_PTR;				// Указатель текущей инструкции
-	state->sp = PETUCHPC_DEFAULT_STACK_PTR;				// Указатель стека
-	state->it = PETUCHPC_DEFAULT_INTERRUPT_TABLE_PTR;	// Указатель на таблицу прерываний
+	state->ip = PETUCHPC_ROM_BASE;				// Указатель текущей инструкции
+	state->sp = PETUCHPC_STACK_BASE;			// Указатель стека
+	state->it = PETUCHPC_INTERRUPT_TABLE_BASE;	// Указатель на таблицу прерываний
 
 	for (int i=0;i<PETUCHPC_REGISTER_COUNT;i++) state->r[i] = 0; // Инициализация регистров
 
