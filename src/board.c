@@ -15,7 +15,7 @@ uint8_t board_read8(cpu_state* state, uint32_t address)
 		case DISPLAY_FRAMEBUFFER_BASE ... DISPLAY_FRAMEBUFFER_BASE + DISPLAY_FRAMEBUFFER_LEN:
 			return framebuffer[address - DISPLAY_FRAMEBUFFER_BASE];
 		default:
-			fprintf(stderr, "Invalid read: 0x%08x\n", address);
+			fprintf(stderr, "Недопустимое чтение: 0x%08x\n", address);
 			return 0;
 	}
 }
@@ -36,14 +36,13 @@ uint32_t board_read32(cpu_state* state, uint32_t address)
 
 void board_write8(cpu_state* state, uint32_t address, uint8_t value)
 {
-	printf("%X ... %X\n", DISPLAY_FRAMEBUFFER_BASE, DISPLAY_FRAMEBUFFER_BASE + DISPLAY_FRAMEBUFFER_LEN);
 	switch (address){
 		case 0 ... PETUCHPC_RAM_SIZE:
 			state->ram[address] = value; break;
 		case DISPLAY_FRAMEBUFFER_BASE ... DISPLAY_FRAMEBUFFER_BASE + DISPLAY_FRAMEBUFFER_LEN:
 			framebuffer[address - DISPLAY_FRAMEBUFFER_BASE] = value; break;
 		default:
-			fprintf(stderr, "Invalid write: 0x%08x\n", address);
+			fprintf(stderr, "Недопустимая запись: 0x%08x\n", address);
 	}
 }
 

@@ -40,17 +40,22 @@ void print_registers(cpu_state* state)
 
 void cpu_execute(cpu_state* state)
 {
+	if (state->halted) return;
+
 	uint16_t op = board_read16(state, state->ip);
 	switch(GET_OPCODE(op)){
 		case NOP:{
 			CHECK_TYPE5_RESERVED(op);
+
 			state->ip += 2;
 			break;
 		}
 		case ADD0:{
 			CHECK_TYPE0_RESERVED(op);
+
 			uint8_t src = GET_TYPE0_SRC(op);
 			uint8_t dest = GET_TYPE0_DEST(op);
+
 			state->r[dest] = state->r[dest] + state->r[src];
 			
 			state->ip += 2;
@@ -58,9 +63,10 @@ void cpu_execute(cpu_state* state)
 		}
 		case ADD3:{
 			CHECK_TYPE3_RESERVED(op);
+
 			uint8_t dest = GET_TYPE3_DEST(op);
 			uint8_t size = GET_TYPE3_SIZE(op);
-			printf("%b\n", op);
+
 			switch (size){
 				case BYTE:{
 					state->r[dest] = state->r[dest] + board_read8(state, state->ip+2);
@@ -82,8 +88,10 @@ void cpu_execute(cpu_state* state)
 		}
 		case SUB0:{
 			CHECK_TYPE0_RESERVED(op);
+
 			uint8_t src = GET_TYPE0_SRC(op);
 			uint8_t dest = GET_TYPE0_DEST(op);
+
 			state->r[dest] = state->r[dest] - state->r[src];
 			
 			state->ip += 2;
@@ -91,8 +99,10 @@ void cpu_execute(cpu_state* state)
 		}
 		case SUB3:{
 			CHECK_TYPE3_RESERVED(op);
+
 			uint8_t dest = GET_TYPE3_DEST(op);
 			uint8_t size = GET_TYPE3_SIZE(op);
+
 			switch (size){
 				case BYTE:{
 					state->r[dest] = state->r[dest] - board_read8(state, state->ip+2);
@@ -110,12 +120,15 @@ void cpu_execute(cpu_state* state)
 					break;
 				}
 			}
+
 			break;
 		}
 		case MUL0:{
 			CHECK_TYPE0_RESERVED(op);
+
 			uint8_t src = GET_TYPE0_SRC(op);
 			uint8_t dest = GET_TYPE0_DEST(op);
+
 			state->r[dest] = state->r[dest] * state->r[src];
 			
 			state->ip += 2;
@@ -123,8 +136,10 @@ void cpu_execute(cpu_state* state)
 		}
 		case MUL3:{
 			CHECK_TYPE3_RESERVED(op);
+
 			uint8_t dest = GET_TYPE3_DEST(op);
 			uint8_t size = GET_TYPE3_SIZE(op);
+
 			switch (size){
 				case BYTE:{
 					state->r[dest] = state->r[dest] * board_read8(state, state->ip+2);
@@ -142,12 +157,15 @@ void cpu_execute(cpu_state* state)
 					break;
 				}
 			}
+
 			break;
 		}
 		case DIV0:{
 			CHECK_TYPE0_RESERVED(op);
+
 			uint8_t src = GET_TYPE0_SRC(op);
 			uint8_t dest = GET_TYPE0_DEST(op);
+
 			state->r[dest] = state->r[dest] / state->r[src];
 			
 			state->ip += 2;
@@ -155,8 +173,10 @@ void cpu_execute(cpu_state* state)
 		}
 		case DIV3:{
 			CHECK_TYPE3_RESERVED(op);
+
 			uint8_t dest = GET_TYPE3_DEST(op);
 			uint8_t size = GET_TYPE3_SIZE(op);
+
 			switch (size){
 				case BYTE:{
 					state->r[dest] = state->r[dest] / board_read8(state, state->ip+2);
@@ -174,12 +194,15 @@ void cpu_execute(cpu_state* state)
 					break;
 				}
 			}
+
 			break;
 		}
 		case CPY:{
 			CHECK_TYPE0_RESERVED(op);
+
 			uint8_t src = GET_TYPE0_SRC(op);
 			uint8_t dest = GET_TYPE0_DEST(op);
+
 			state->r[dest] = state->r[src];
 
 			state->ip += 2;
@@ -187,9 +210,11 @@ void cpu_execute(cpu_state* state)
 		}
 		case XCHG:{
 			CHECK_TYPE0_RESERVED(op);
+
 			uint8_t src = GET_TYPE0_SRC(op);
 			uint8_t dest = GET_TYPE0_DEST(op);
 			uint32_t temp = state->r[dest];
+
 			state->r[dest] = state->r[src];
 			state->r[src] = temp;
 
@@ -198,8 +223,10 @@ void cpu_execute(cpu_state* state)
 		}
 		case AND0:{
 			CHECK_TYPE0_RESERVED(op);
+
 			uint8_t src = GET_TYPE0_SRC(op);
 			uint8_t dest = GET_TYPE0_DEST(op);
+
 			state->r[dest] = state->r[dest] & state->r[src];
 
 			state->ip += 2;
@@ -207,8 +234,10 @@ void cpu_execute(cpu_state* state)
 		}
 		case AND3:{
 			CHECK_TYPE3_RESERVED(op);
+
 			uint8_t dest = GET_TYPE3_DEST(op);
 			uint8_t size = GET_TYPE3_SIZE(op);
+
 			switch (size){
 				case BYTE:{
 					state->r[dest] = state->r[dest] & board_read8(state, state->ip+2);
@@ -226,12 +255,15 @@ void cpu_execute(cpu_state* state)
 					break;
 				}
 			}
+
 			break;
 		}
 		case OR0:{
 			CHECK_TYPE0_RESERVED(op);
+
 			uint8_t src = GET_TYPE0_SRC(op);
 			uint8_t dest = GET_TYPE0_DEST(op);
+
 			state->r[dest] = state->r[dest] | state->r[src];
 
 			state->ip += 2;
@@ -239,8 +271,10 @@ void cpu_execute(cpu_state* state)
 		}
 		case OR3:{
 			CHECK_TYPE3_RESERVED(op);
+
 			uint8_t dest = GET_TYPE3_DEST(op);
 			uint8_t size = GET_TYPE3_SIZE(op);
+
 			switch (size){
 				case BYTE:{
 					state->r[dest] = state->r[dest] | board_read8(state, state->ip+2);
@@ -258,19 +292,25 @@ void cpu_execute(cpu_state* state)
 					break;
 				}
 			}
+
 			break;
 		}
 		case NOT:{
 			CHECK_TYPE4_RESERVED(op);
+
 			uint8_t dest = GET_TYPE4_DEST(op);
+
 			state->r[dest] = ~state->r[dest];
+
 			state->ip += 2;
 			break;
 		}
 		case XOR0:{
 			CHECK_TYPE0_RESERVED(op);
+
 			uint8_t src = GET_TYPE0_SRC(op);
 			uint8_t dest = GET_TYPE0_DEST(op);
+
 			state->r[dest] = state->r[dest] ^ state->r[src];
 
 			state->ip += 2;
@@ -278,8 +318,10 @@ void cpu_execute(cpu_state* state)
 		}
 		case XOR3:{
 			CHECK_TYPE3_RESERVED(op);
+
 			uint8_t dest = GET_TYPE3_DEST(op);
 			uint8_t size = GET_TYPE3_SIZE(op);
+
 			switch (size){
 				case BYTE:{
 					state->r[dest] = state->r[dest] ^ board_read8(state, state->ip+2);
@@ -297,22 +339,30 @@ void cpu_execute(cpu_state* state)
 					break;
 				}
 			}
+
 			break;
 		}
 		case INC:{
 			CHECK_TYPE4_RESERVED(op);
+
 			uint8_t dest = GET_TYPE4_DEST(op);
+
 			state->r[dest]++;
+
 			state->ip += 2;
 			break;
 		}
 		case DEC:{
 			CHECK_TYPE4_RESERVED(op);
+
 			uint8_t dest = GET_TYPE4_DEST(op);
+
 			state->r[dest]--;
+
 			state->ip += 2;
 			break;
 		}
+		// PUSH и POP как-нибудь потом
 		case PUSH4:{
 
 			state->ip += 2;
@@ -332,12 +382,13 @@ void cpu_execute(cpu_state* state)
 			CHECK_TYPE2_RESERVED(op);
 
 			uint8_t size = GET_TYPE2_SIZE(op);
-			printf("%X\n", (uint32_t)board_read8(state, state->ip+2));
+
 			switch (size){
 				case BYTE: state->ip = (uint32_t)board_read8(state, state->ip+2); break;
 				case WORD: state->ip = (uint32_t)board_read16(state, state->ip+2); break;
 				case DWORD: state->ip = board_read32(state, state->ip+2); break;
 			}
+
 			break;
 		}
 		case LD1:{
@@ -354,7 +405,6 @@ void cpu_execute(cpu_state* state)
 			}
 
 			state->ip += 6;
-
 			break;
 		}
 		case LD3:{
@@ -399,6 +449,7 @@ void cpu_execute(cpu_state* state)
 			break;
 		}
 	}
+	// Вывод регистров и опкода, потом уберу
 	print_registers(state);
 	printf("ip: 0x%08x\n", state->ip);
 	printf("%x\n", GET_OPCODE(op));

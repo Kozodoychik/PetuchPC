@@ -19,20 +19,20 @@ void display_init()
 	SDL_Init(SDL_INIT_VIDEO);
 
 	display_window = SDL_CreateWindow(
-        "PetuchPC Emulator", 
+        "Эмулятор PetuchPC", 
         SDL_WINDOWPOS_CENTERED, 
         SDL_WINDOWPOS_CENTERED, 
         DISPLAY_WIDTH, DISPLAY_HEIGHT, 
         0
     );
     if (!display_window){
-        fprintf(stderr, "SDL_CreateWindow error");
+        fprintf(stderr, "Ошибка SDL_CreateWindow\n");
         return;
     }
 
     display_renderer = SDL_CreateRenderer(display_window, -1, 0);
     if (!display_renderer){
-        fprintf(stderr, "SDL_CreateRenderer error");
+        fprintf(stderr, "Ошибка SDL_CreateRenderer\n");
         return;
     }
 

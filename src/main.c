@@ -18,9 +18,10 @@ int main(int argc, char* argv[])
 	if (argc > 1) {
 		for (int i=1;i<argc;i++) {
 			if (strcmp(argv[i], "-h") == 0) {
-				fprintf(stderr, "Usage: %s [options]\n"
-						"Options:\n"
-						"  -h		Shows this message.\n", argv[0]);
+				fprintf(stderr, "Использование: %s [параметры]\n"
+						"Параметры:\n"
+						"  -h				Вывод данного сообщения.\n"
+						"  -rom [файл]		Использование образа ПЗУ.\n", argv[0]);
 				return 0;
 			}
 			else if (strcmp(argv[i], "-rom") == 0) {
@@ -30,7 +31,7 @@ int main(int argc, char* argv[])
 				}
 			}
 			else {
-				fprintf(stderr, "wtf\n");
+				fprintf(stderr, "Неизвестный параметр: %s\n", argv[i]);
 				return 1;
 			}
 		}
@@ -39,7 +40,7 @@ int main(int argc, char* argv[])
 	cpu_state* state = (cpu_state*)malloc(sizeof(cpu_state));
 
 	if (!state){
-		fprintf(stderr, "Cannot allocate memory for cpu state\n");
+		fprintf(stderr, "Невозможно выделить память\n");
 		return 1;
 	}
 
@@ -59,6 +60,7 @@ int main(int argc, char* argv[])
 
 void main_loop(cpu_state* state)
 {
+	//	Не очень хорошая реализация, но пока пусть будет так
 	while (1){
 		cpu_execute(state);
 		int status = display_update();
@@ -73,7 +75,7 @@ int load_rom(cpu_state* state, char* file)
 	FILE* rom = fopen(file, "rb");
 
 	if (!rom) {
-		fprintf(stderr, "Cannot open ROM file: %s\n", file);
+		fprintf(stderr, "Невозможно открыть образ ПЗУ: %s\n", file);
 		return 1;
 	}
 	fread(&state->rom, 1, PETUCHPC_ROM_SIZE, rom);
