@@ -1,3 +1,6 @@
 docs/
 .vscode/
 out/
+tools/petuchpc-asm/__pycache__
+tools/petuchpc-asm/demo.s
+tools/petuchpc-asm/out.bin

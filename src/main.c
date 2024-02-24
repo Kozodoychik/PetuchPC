@@ -1,13 +1,14 @@
 #include "cpu.h"
-#include "memory.h"
+#include "board.h"
+#include "display.h"
 
-#include <SDL2/SDL.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 
 
+void main_loop();
 int load_rom(cpu_state*, char*);
 
 int main(int argc, char* argv[])
@@ -42,23 +43,29 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	cpu_init(state);
+	cpu_reset(state);
 
 	load_rom(state, rom_file);
 
-	memory_init(state, PETUCHPC_ROM_BASE, PETUCHPC_ROM_SIZE);
+	display_init();
+	
+	main_loop(state);
 
-	cpu_execute(state);
-	/*SDL_Window* win;
-	SDL_Init(SDL_INIT_VIDEO);
-	win = SDL_CreateWindow("shto", 100, 100, 640, 480, 0);
-	SDL_Delay(3000);
-	SDL_DestroyWindow(win);
-	SDL_Quit();
-	*/
+	free(state);
 
 	return 0;
 
+}
+
+void main_loop(cpu_state* state)
+{
+	while (1){
+		cpu_execute(state);
+		int status = display_update();
+
+		if (status) break;
+		getc(stdin);
+	}
 }
 
 int load_rom(cpu_state* state, char* file)

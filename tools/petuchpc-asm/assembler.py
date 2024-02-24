@@ -79,7 +79,7 @@ instr = {
     "call":[Instruction(24, InstructionTypes.TYPE2)],
     "int":[Instruction(25, InstructionTypes.TYPE2)],
     "ld":[Instruction(26, InstructionTypes.TYPE1), Instruction(27, InstructionTypes.TYPE3)],
-    "st":[Instruction(28, InstructionTypes.TYPE3)],
+    "st":[Instruction(28, InstructionTypes.TYPE1)],
     "cmp":[Instruction(29, InstructionTypes.TYPE0), Instruction(30, InstructionTypes.TYPE3)],
     "ret":[Instruction(31, InstructionTypes.TYPE5)],
     "iret":[Instruction(32, InstructionTypes.TYPE5)],
@@ -289,6 +289,7 @@ class PetuchPCAsm:
                         o = \
                             instruction.opcode << 2 \
                             | size.value & 0b11
+                        data.append((o & 0xff00) >> 8)
                         data.append(o & 0xff)
                         match size:
                             case Size.BYTE:
@@ -345,6 +346,7 @@ class PetuchPCAsm:
                         o = \
                             instruction.opcode << 2
                         data.append(o & 0xff)
+                        data.append((o & 0xff00) >> 8)
                         
                         offset += 1
             elif token["type"] == TokenTypes.LABEL:

@@ -7,7 +7,7 @@
 #define PETUCHPC_ROM_SIZE 0x00100000
 
 #define PETUCHPC_INTERRUPT_TABLE_BASE 0x00000000
-#define PETUCHPC_STACK_BASE 0x80000000
+#define PETUCHPC_STACK_BASE 0x04000000
 #define PETUCHPC_ROM_BASE 0xf0000000
 
 #define PETUCHPC_REGISTER_COUNT 16
@@ -19,22 +19,24 @@
 #define GET_TYPE0_RESERVED(a) ((uint8_t)(a & 0b11))
 
 #define GET_TYPE1_SIZE(a) ((uint8_t)((a & 0b0000001100000000) >> 8))
-#define GET_TYPE1_DEST(a) ((uint8_t)((a & 0b0000000011110000) >> 6))
+#define GET_TYPE1_DEST(a) ((uint8_t)((a & 0b0000000011110000) >> 4))
 #define GET_TYPE1_RESERVED(a) ((uint8_t)(a & 0b1111))
 
-#define GET_TYPE2_SIZE(a) ((uint8_t)(a & 0b00000011))
+#define GET_TYPE2_SIZE(a) ((uint8_t)(a & 0b0000001100000000) >> 8)
+#define GET_TYPE2_RESERVED(a) ((uint8_t)(a & 0b11111111))
 
 #define GET_TYPE3_SIZE(a) ((uint8_t)((a & 0b0000001100000000) >> 8))
-#define GET_TYPE3_DEST(a) ((uint8_t)((a & 0b0000000011110000) >> 6))
+#define GET_TYPE3_DEST(a) ((uint8_t)((a & 0b0000000011110000) >> 4))
 #define GET_TYPE3_RESERVED(a) ((uint8_t)(a & 0b1111))
 
 #define GET_TYPE4_DEST(a) ((uint8_t)((a & 0b0000001111000000) >> 6))
 #define GET_TYPE4_RESERVED(a) ((uint8_t)(a & 0b0000000000111111))
 
-#define GET_TYPE5_RESERVED(a) ((uint8_t)(a & 0b11))
+#define GET_TYPE5_RESERVED(a) ((uint8_t)(a & 0b1111111111))
 
 #define CHECK_TYPE0_RESERVED(a) ({ if (GET_TYPE0_RESERVED(a) != 0) fprintf(stderr, "Reserved bits != 0!!!"); })
 #define CHECK_TYPE1_RESERVED(a) ({ if (GET_TYPE1_RESERVED(a) != 0) fprintf(stderr, "Reserved bits != 0!!!"); })
+#define CHECK_TYPE2_RESERVED(a) ({ if (GET_TYPE2_RESERVED(a) != 0) fprintf(stderr, "Reserved bits != 0!!!"); })
 #define CHECK_TYPE3_RESERVED(a) ({ if (GET_TYPE3_RESERVED(a) != 0) fprintf(stderr, "Reserved bits != 0!!!"); })
 #define CHECK_TYPE4_RESERVED(a) ({ if (GET_TYPE4_RESERVED(a) != 0) fprintf(stderr, "Reserved bits != 0!!!"); })
 #define CHECK_TYPE5_RESERVED(a) ({ if (GET_TYPE5_RESERVED(a) != 0) fprintf(stderr, "Reserved bits != 0!!!"); })
@@ -107,6 +109,6 @@ typedef enum {
 	HLT
 } cpu_opcode;
 
-void cpu_init(cpu_state*);
+void cpu_reset(cpu_state*);
 void cpu_interrupt(cpu_state*, int);
 void cpu_execute(cpu_state*);
