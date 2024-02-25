@@ -48,7 +48,7 @@ void display_init()
         DISPLAY_WIDTH, DISPLAY_HEIGHT
     );
 
-    framebuffer = (uint8_t*)calloc((DISPLAY_WIDTH * DISPLAY_HEIGHT)*4, 1);
+    framebuffer = (uint8_t*)calloc((DISPLAY_WIDTH * DISPLAY_HEIGHT) * 4, 1);
 
     display_update();
 
@@ -57,7 +57,7 @@ void display_init()
 }
 
 int display_update(){
-    SDL_UpdateTexture(display_texture, NULL, framebuffer, DISPLAY_WIDTH * 3);
+    SDL_UpdateTexture(display_texture, NULL, framebuffer, DISPLAY_WIDTH * 4);
 
     SDL_RenderClear(display_renderer);
     SDL_RenderCopy(display_renderer, display_texture, NULL, NULL);

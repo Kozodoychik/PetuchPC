@@ -22,8 +22,9 @@
 #define GET_TYPE1_DEST(a) ((uint8_t)((a & 0b0000000011110000) >> 4))
 #define GET_TYPE1_RESERVED(a) ((uint8_t)(a & 0b1111))
 
-#define GET_TYPE2_SIZE(a) ((uint8_t)(a & 0b0000001100000000) >> 8)
-#define GET_TYPE2_RESERVED(a) ((uint8_t)(a & 0b11111111))
+#define GET_TYPE2_SIZE(a) ((uint8_t)((a & 0b0000001100000000) >> 8))
+#define GET_TYPE2_COND(a) ((uint8_t)((a & 0b11100000) >> 5))
+#define GET_TYPE2_RESERVED(a) ((uint8_t)(a & 0b11111))
 
 #define GET_TYPE3_SIZE(a) ((uint8_t)((a & 0b0000001100000000) >> 8))
 #define GET_TYPE3_DEST(a) ((uint8_t)((a & 0b0000000011110000) >> 4))
@@ -33,6 +34,10 @@
 #define GET_TYPE4_RESERVED(a) ((uint8_t)(a & 0b0000000000111111))
 
 #define GET_TYPE5_RESERVED(a) ((uint8_t)(a & 0b1111111111))
+
+#define GET_TYPE6_DEST(a) ((uint8_t)((a & 0b0000001111000000) >> 6))
+#define GET_TYPE6_SRC(a) ((uint8_t)((a & 0b0000000000111100) >> 2))
+#define GET_TYPE6_SIZE(a) ((uint8_t)(a & 0b11))
 
 #define CHECK_TYPE0_RESERVED(a) ({ if (GET_TYPE0_RESERVED(a) != 0) fprintf(stderr, "Reserved bits != 0!!!"); })
 #define CHECK_TYPE1_RESERVED(a) ({ if (GET_TYPE1_RESERVED(a) != 0) fprintf(stderr, "Reserved bits != 0!!!"); })
@@ -73,6 +78,14 @@ typedef enum {
 } cpu_operand_size;
 
 typedef enum {
+	COND_ALWAYS,
+	COND_EQ,
+	COND_NEQ,
+	COND_GR,
+	COND_L
+} cpu_condition;
+
+typedef enum {
 	NOP,
 	ADD0,
 	ADD3,
@@ -101,7 +114,9 @@ typedef enum {
 	INT,
 	LD1,
 	LD3,
-	ST,
+	LD6,
+	ST1,
+	ST6,
 	CMP0,
 	CMP3,
 	RET,

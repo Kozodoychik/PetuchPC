@@ -1,3 +1,5 @@
+# Ультракривой ассемблер для PetuchPC
+
 import re
 import sys
 from enum import Enum
@@ -32,6 +34,7 @@ class InstructionTypes(Enum):
     TYPE3 = 3
     TYPE4 = 4
     TYPE5 = 5
+    TYPE6 = 6
 
 class Size(Enum):
     BYTE = 0
@@ -59,6 +62,14 @@ registers = {
     "r15":15
 }
 
+conditions = {
+    "":0,
+    "eq":1,
+    "neq":2,
+    "gr":3,
+    "l":4
+}
+
 instr = {
     "nop":[Instruction(0, InstructionTypes.TYPE5)],
     "add":[Instruction(1, InstructionTypes.TYPE0), Instruction(2, InstructionTypes.TYPE3)],
@@ -78,21 +89,22 @@ instr = {
     "jmp":[Instruction(23, InstructionTypes.TYPE2)],
     "call":[Instruction(24, InstructionTypes.TYPE2)],
     "int":[Instruction(25, InstructionTypes.TYPE2)],
-    "ld":[Instruction(26, InstructionTypes.TYPE1), Instruction(27, InstructionTypes.TYPE3)],
-    "st":[Instruction(28, InstructionTypes.TYPE1)],
-    "cmp":[Instruction(29, InstructionTypes.TYPE0), Instruction(30, InstructionTypes.TYPE3)],
-    "ret":[Instruction(31, InstructionTypes.TYPE5)],
-    "iret":[Instruction(32, InstructionTypes.TYPE5)],
-    "hlt":[Instruction(33, InstructionTypes.TYPE5)]
+    "ld":[Instruction(26, InstructionTypes.TYPE1), Instruction(27, InstructionTypes.TYPE3), Instruction(28, InstructionTypes.TYPE6)],
+    "st":[Instruction(29, InstructionTypes.TYPE1), Instruction(30, InstructionTypes.TYPE6)],
+    "cmp":[Instruction(31, InstructionTypes.TYPE0), Instruction(32, InstructionTypes.TYPE3)],
+    "ret":[Instruction(33, InstructionTypes.TYPE5)],
+    "iret":[Instruction(34, InstructionTypes.TYPE5)],
+    "hlt":[Instruction(35, InstructionTypes.TYPE5)]
 }
 
 RE_OPERAND = r"[\[]?[a-zA_Z0-9#\-_.]+[\]]?"
-RE_INSTR = rf"^(?:|\s+)(?P<opcode>[a-z]+)(?:.(?P<size>[bwd]))?(?: (?P<operand1>{RE_OPERAND})(?:, (?P<operand2>{RE_OPERAND}))?)?$"
+RE_INSTR = rf"^(?:|\s+)(?P<cond>(|eq|neq|gr|l))? ?(?P<opcode>[a-z]+)(?:.(?P<size>[bwd]))?(?: (?P<operand1>{RE_OPERAND})(?:, (?P<operand2>{RE_OPERAND}))?)?$"
 RE_LABEL = r"^(?:|\s+)(?P<label>[a-zA-Z0-9_]+):$"
 RE_OPERAND_LABEL = r"^[a-zA-Z0-9_]+$"
 RE_OPERAND_LABEL_PTR = r"^\[[a-zA-Z0-9_]+\]$"
 RE_HEX = r"[0-9a-fA-F]+"
 RE_OPERAND_PTR = rf"^\[0x{RE_HEX}\]$"
+RE_PTR = r"^\[\w*\]$"
 
 class PetuchPCAsm:
     
@@ -109,12 +121,15 @@ class PetuchPCAsm:
             return OperandTypes.IMM
         elif operand.isdigit():
             return OperandTypes.IMM
-        elif re.match(RE_OPERAND_PTR, operand):
-            return OperandTypes.IMM_PTR
         elif re.match(RE_OPERAND_LABEL, operand):
             return OperandTypes.LABEL
-        elif re.match(RE_OPERAND_LABEL_PTR, operand):
-            return OperandTypes.LABEL_PTR
+        elif re.match(RE_PTR, operand):
+            if operand.lstrip("[").rstrip("]") in registers:
+                return OperandTypes.REG_PTR
+            elif re.match(RE_OPERAND_PTR, operand):
+                return OperandTypes.IMM_PTR
+            elif re.match(RE_OPERAND_LABEL_PTR, operand):
+                return OperandTypes.LABEL_PTR
         
         print(f"Invalid operand: {operand}")
         sys.exit()
@@ -130,13 +145,17 @@ class PetuchPCAsm:
         self.tokens.append(token)
 
     def parse_instruction(self, line: str):
+        if (re.match(r"^\s*$", line)): return
         m = re.match(RE_INSTR, line)
 
-        if not m: return
+        if not m: 
+            print(f"Cannot parse line: {line}")
+            sys.exit()
         if not m.group("opcode") in instr:
             print(f"Invalid instruction: {m.group('opcode')}")
             sys.exit()
 
+        print(m.group("cond"))
         token = {
             "type":TokenTypes.INSTRUCTION,
             "opcode":m.group("opcode"),
@@ -146,7 +165,8 @@ class PetuchPCAsm:
                     [m.group("operand1"), m.group("operand2")]
                 )
             ),
-            "size":m.group("size") or "d"
+            "size":m.group("size") or "d",
+            "condition":m.group("cond") or ""
         }
         
         self.tokens.append(token)
@@ -178,6 +198,9 @@ class PetuchPCAsm:
                         return InstructionTypes.TYPE3
                     case OperandTypes.LABEL:
                         return InstructionTypes.TYPE3
+                    case OperandTypes.REG_PTR:
+                        return InstructionTypes.TYPE6
+            return None
         elif len(token["operands"]) == 1:
             operand_type = self.get_operand_type(token["operands"][0])
             match operand_type:
@@ -189,6 +212,7 @@ class PetuchPCAsm:
                     return InstructionTypes.TYPE4
         else:
             return InstructionTypes.TYPE5
+        print("Invalid operands")
         sys.exit()
 
     def get_imm_value(self, imm):
@@ -237,7 +261,6 @@ class PetuchPCAsm:
         data = bytearray()
 
         for token in self.tokens:
-            #print(token)
             if token["type"] == TokenTypes.INSTRUCTION:
                 instruction = self.get_instruction(token)
                 
@@ -256,7 +279,8 @@ class PetuchPCAsm:
                         o = \
                             instruction.opcode << 10 \
                             | self.get_size(token).value << 8 \
-                            | registers[token["operands"][0]] << 4
+                            | registers[token["operands"][0].lstrip("[").rstrip("]")] << 4
+                        print(bin(o))
                         data.append(o & 0xff)
                         data.append((o & 0xff00) >> 8)
 
@@ -280,17 +304,18 @@ class PetuchPCAsm:
                         if self.get_operand_type(token["operands"][0]) == OperandTypes.LABEL:
                             size = Size.DWORD
                             self.relocations.append({
-                                "offset":len(data)+1,
+                                "offset":len(data)+2,
                                 "name":token["operands"][0].lstrip("[").rstrip("]")
                             })
                         else:
                             size = self.get_imm_size(token["operands"][0])
                             operand = self.get_imm_value(token["operands"][0])
                         o = \
-                            instruction.opcode << 2 \
-                            | size.value & 0b11
-                        data.append((o & 0xff00) >> 8)
+                            instruction.opcode << 10 \
+                            | (size.value & 0b11) << 8 \
+                            | conditions[token["condition"]] << 5
                         data.append(o & 0xff)
+                        data.append((o & 0xff00) >> 8)
                         match size:
                             case Size.BYTE:
                                 data.append(operand & 0xff)
@@ -303,7 +328,7 @@ class PetuchPCAsm:
                                 data.append((operand & 0xff0000) >> 16)
                                 data.append((operand & 0xff000000) >> 24)
 
-                        offset += 1 + (2**(size.value))
+                        offset += 2 + (2**(size.value))
                     case InstructionTypes.TYPE3:
                         operand = 0
                         if self.get_operand_type(token["operands"][1]) == OperandTypes.LABEL:
@@ -345,10 +370,21 @@ class PetuchPCAsm:
                     case InstructionTypes.TYPE5:
                         o = \
                             instruction.opcode << 2
+                        data.append((o & 0xff00) >> 8)
+                        data.append(o & 0xff)
+                        
+                        offset += 2
+                    case InstructionTypes.TYPE6:
+                        o = \
+                            instruction.opcode << 10 \
+                            | registers[token["operands"][0]] << 6 \
+                            | registers[token["operands"][1].lstrip("[").rstrip("]")] << 2 \
+                            | self.get_size(token).value
                         data.append(o & 0xff)
                         data.append((o & 0xff00) >> 8)
                         
-                        offset += 1
+                        offset += 2
+                            
             elif token["type"] == TokenTypes.LABEL:
                 self.labels.update({token["name"]:offset})
             elif token["type"] == TokenTypes.DIRECTIVE:

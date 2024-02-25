@@ -2,6 +2,7 @@
 #include "board.h"
 #include "display.h"
 
+#include <SDL2/SDL.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -60,13 +61,32 @@ int main(int argc, char* argv[])
 
 void main_loop(cpu_state* state)
 {
-	//	Не очень хорошая реализация, но пока пусть будет так
-	while (1){
-		cpu_execute(state);
-		int status = display_update();
+	int tick_start = SDL_GetTicks();
+	//int tick_end = SDL_GetTicks();
 
+	while (1){
+		int delta_time = SDL_GetTicks() - tick_start;
+		int tick_start = SDL_GetTicks();
+
+		if (!delta_time) delta_time = 1;
+
+		int cpt = 33000000 / 60 / delta_time;
+		int extra_cycles = 33000000 / 60 - (cpt * delta_time);
+
+		for (int i=0;i<delta_time;i++){
+			int cycles_left = cpt;
+
+			if (i == delta_time - 1) cycles_left += extra_cycles;
+
+			while (cycles_left > 0){
+				cpu_execute(state);
+				//getc(stdin);
+				cycles_left--;
+			}
+		}
+
+		int status = display_update();
 		if (status) break;
-		getc(stdin);
 	}
 }
 
