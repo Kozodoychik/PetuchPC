@@ -1,4 +1,4 @@
-#include "keyboard.h"
+ï»¿#include "keyboard.h"
 #include "board.h"
 
 #include <stdio.h>
@@ -6,7 +6,7 @@
 #include <string.h>
 
 
-// Æåñòü...
+// Ð–ÐµÑÑ‚ÑŒ...
 uint8_t ps2_scancodes[255] = {
 	[SDL_SCANCODE_0] = 0x0b,
 	[SDL_SCANCODE_1] = 0x02,
@@ -79,10 +79,10 @@ void keyboard_handle_event(SDL_KeyboardEvent* event) {
 		keyboard_buffer[keyboard_buffer_pointer] = ps2_scancodes[event->keysym.scancode];
 		keyboard_buffer_pointer++;
 
-		printf("Êëàâèàòóðà: Ïîëó÷åí ñêàíêîä: 0x%02X\r\n", ps2_scancodes[event->keysym.scancode]);
+		printf("ÐšÐ»Ð°Ð²Ð¸Ð°Ñ‚ÑƒÑ€Ð°: ÐŸÐ¾Ð»ÑƒÑ‡ÐµÐ½ ÑÐºÐ°Ð½ÐºÐ¾Ð´: 0x%02X\r\n", ps2_scancodes[event->keysym.scancode]);
 	}
 	else {
-		printf("ÏÐÅÄÓÏÐÅÆÄÅÍÈÅ: Êëàâèàòóðà: Ïåðåïîëíåíèå âíóòðåííåãî áóôåðà, èãíîðèðîâàíèå 0x%02X\r\n", ps2_scancodes[event->keysym.scancode]);
+		printf("ÐŸÐ Ð•Ð”Ð£ÐŸÐ Ð•Ð–Ð”Ð•ÐÐ˜Ð•: ÐšÐ»Ð°Ð²Ð¸Ð°Ñ‚ÑƒÑ€Ð°: ÐŸÐµÑ€ÐµÐ¿Ð¾Ð»Ð½ÐµÐ½Ð¸Ðµ Ð²Ð½ÑƒÑ‚Ñ€ÐµÐ½Ð½ÐµÐ³Ð¾ Ð±ÑƒÑ„ÐµÑ€Ð°, Ð¸Ð³Ð½Ð¾Ñ€Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¸Ðµ 0x%02X\r\n", ps2_scancodes[event->keysym.scancode]);
 	}
 
 	if (use_irq)
