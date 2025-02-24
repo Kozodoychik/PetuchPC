@@ -76,6 +76,11 @@ int display_update(){
                 free(framebuffer);
                 return -1;
             }
+            case SDL_KEYDOWN:
+            case SDL_KEYUP: {
+                keyboard_handle_event(&e.key);
+                break;
+            }
         }
 	}
     return 0;

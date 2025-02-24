@@ -50,5 +50,8 @@
     <ClInclude Include="src\mmu.h">
       <Filter>Исходные файлы</Filter>
     </ClInclude>
+    <ClInclude Include="src\irq.h">
+      <Filter>Исходные файлы</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

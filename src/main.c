@@ -1,6 +1,7 @@
 ﻿#include "cpu.h"
 #include "board.h"
 #include "display.h"
+#include "keyboard.h"
 
 #include <SDL.h>
 #include <string.h>
@@ -88,6 +89,7 @@ int main(int argc, char* argv[])
 		load_rom(state, "bios.bin");
 
 	board_init(state);
+	keyboard_init(state);
 	display_init();
 	
 	main_loop(state);

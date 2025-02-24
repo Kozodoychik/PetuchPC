@@ -1,0 +1,5 @@
+
+#define IRQ_BASE 0x20
+
+#define IRQ_WATCHDOG IRQ_BASE
+#define IRQ_KEYBOARD IRQ_BASE + 0x1
