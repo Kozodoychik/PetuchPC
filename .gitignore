@@ -363,3 +363,5 @@ MigrationBackup/
 FodyWeavers.xsd
 
 bios.bin
+/font.bin
+/ramdump.bin
