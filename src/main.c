@@ -8,24 +8,25 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <locale.h>
 
 
-void main_loop(cpu_state* state)
-{
+void main_loop(cpu_state* state) {
 	int tick_start = SDL_GetTicks();
 
 	state->halted = false;
-	//int tick_end = SDL_GetTicks();
-
+	
 	while (1) {
 		int delta_time = SDL_GetTicks() - tick_start;
 		int tick_start = SDL_GetTicks();
-
+		
 		if (!delta_time) delta_time = 1;
 
 		int cpt = 33000000 / 60 / delta_time;
 		int extra_cycles = 33000000 / 60 - (cpt * delta_time);
+
+		int tick = SDL_GetTicks();
 
 		for (int i = 0;i < delta_time;i++) {
 			int cycles_left = cpt;
@@ -34,10 +35,10 @@ void main_loop(cpu_state* state)
 
 			while (cycles_left > 0) {
 				cpu_execute(state);
-				//getc(stdin);
 				cycles_left--;
 			}
 		}
+		int t = SDL_GetTicks() - tick;
 
 		int status = display_update();
 		if (status) break;
@@ -45,11 +46,12 @@ void main_loop(cpu_state* state)
 }
 int load_rom(cpu_state*, char*);
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
 	setlocale(LC_ALL, "Russian");
 
 	char* rom_file = NULL;
+
+	bool ram_dump_on_exit = false;
 
 	if (argc > 1) {
 		for (int i=1;i<argc;i++) {
@@ -57,8 +59,8 @@ int main(int argc, char* argv[])
 				fprintf(stderr, "Использование: %s [параметры]\n"
 						"Параметры:\n"
 						"  -h					Вывод данного сообщения.\n"
-						"  -rom [файл]			Использование образа ПЗУ.\n"
-						"  -d					Дамп ОЗУ после остановки процессора", argv[0]);
+						"  -rom [файл]				Использование образа ПЗУ.\n"
+						"  -d					Дамп ОЗУ при выходе", argv[0]);
 				return 0;
 			}
 			else if (strcmp(argv[i], "-rom") == 0) {
@@ -66,6 +68,9 @@ int main(int argc, char* argv[])
 					rom_file = argv[i+1];
 					i++;
 				}
+			}
+			else if (strcmp(argv[i], "-d") == 0) {
+				ram_dump_on_exit = true;
 			}
 			else {
 				fprintf(stderr, "ОШИБКА: Неизвестный параметр: %s\n", argv[i]);
@@ -94,14 +99,19 @@ int main(int argc, char* argv[])
 	
 	main_loop(state);
 
+	if (ram_dump_on_exit) {
+		FILE* ram = fopen("ramdump.bin", "wb");
+		fwrite(state->ram, 1, PETUCHPC_RAM_SIZE, ram);
+		fclose(ram);
+	}
+
 	free(state);
 
 	return 0;
 
 }
 
-int load_rom(cpu_state* state, char* file)
-{
+int load_rom(cpu_state* state, char* file) {
 	FILE* rom = fopen(file, "rb");
 
 	if (!rom) {

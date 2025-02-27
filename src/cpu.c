@@ -6,8 +6,7 @@
 #include <math.h>
 #include <string.h>
 
-void cpu_reset(cpu_state* state)
-{
+void cpu_reset(cpu_state* state) {
 	// Инициализируем память, регистры и устанавливаем значения по умолчанию для ip, sp и it
 
 	memset(state->ram, 0, PETUCHPC_RAM_SIZE);
@@ -28,7 +27,6 @@ void cpu_reset(cpu_state* state)
 	state->flags.interrupt = true;
 	state->flags.negative = false;
 
-	state->settings.ram_dump_on_halt = false;
 }
 
 uint8_t flags_to_byte(cpu_state* state) {
@@ -49,52 +47,52 @@ void byte_to_flags(cpu_state* state, uint8_t flags) {
 uint8_t cpu_read8(cpu_state* state, uint32_t address) {
 	if (state->msr & PETUCHPC_MSR_MMU_MASK) {
 		uint32_t physical_address = mmu_virtual_to_physical(state, address);
-		return board_read8(state, physical_address);
+		return (uint8_t)board_read(state, physical_address, 1);
 	}
-	return board_read8(state, address);
+	return (uint8_t)board_read(state, address, 1);
 }
 
 uint16_t cpu_read16(cpu_state* state, uint32_t address) {
 	if (state->msr & PETUCHPC_MSR_MMU_MASK) {
 		uint32_t physical_address = mmu_virtual_to_physical(state, address);
-		return board_read16(state, physical_address);
+		return (uint16_t)board_read(state, physical_address, 2);
 	}
-	return board_read16(state, address);
+	return (uint16_t)board_read(state, address, 2);
 }
 
 uint32_t cpu_read32(cpu_state* state, uint32_t address) {
 	if (state->msr & PETUCHPC_MSR_MMU_MASK) {
 		uint32_t physical_address = mmu_virtual_to_physical(state, address);
-		return board_read32(state, physical_address);
+		return board_read(state, physical_address, 4);
 	}
-	return board_read32(state, address);
+	return board_read(state, address, 4);
 }
 
 void cpu_write8(cpu_state* state, uint32_t address, uint8_t value) {
 	if (state->msr & PETUCHPC_MSR_MMU_MASK) {
 		uint32_t physical_address = mmu_virtual_to_physical(state, address);
-		board_write8(state, physical_address, value);
+		board_write(state, physical_address, 1, (uint32_t)value);
 		return;
 	}
-	board_write8(state, address, value);
+	board_write(state, address, 1, (uint32_t)value);
 }
 
 void cpu_write16(cpu_state* state, uint32_t address, uint16_t value) {
 	if (state->msr & PETUCHPC_MSR_MMU_MASK) {
 		uint32_t physical_address = mmu_virtual_to_physical(state, address);
-		board_write16(state, physical_address, value);
+		board_write(state, physical_address, 2, (uint32_t)value);
 		return;
 	}
-	board_write16(state, address, value);
+	board_write(state, address, 2, (uint32_t)value);
 }
 
 void cpu_write32(cpu_state* state, uint32_t address, uint32_t value) {
 	if (state->msr & PETUCHPC_MSR_MMU_MASK) {
 		uint32_t physical_address = mmu_virtual_to_physical(state, address);
-		board_write32(state, physical_address, value);
+		board_write(state, physical_address, 4, value);
 		return;
 	}
-	board_write32(state, address, value);
+	board_write(state, address, 4, value);
 }
 
 void push_registers(cpu_state* state) {
@@ -121,12 +119,13 @@ void pop_registers(cpu_state* state) {
 
 /*	ИСКЛЮЧЕНИЯ
  
-	0x00 - Деление на нуль
+	0x00 - Деление на нуль	(пока не используется лол)
 	0x01 - Чтение с недоступной страницы
 */
 
-void cpu_interrupt(cpu_state* state, int interrupt)
-{
+void cpu_interrupt(cpu_state* state, int interrupt) {
+	if (!state->flags.interrupt) return;
+
 	uint32_t* interrupt_table = (uint32_t*)state->ram+state->it;
 
 	PUSH(state->ip);
@@ -141,16 +140,14 @@ void cpu_interrupt(cpu_state* state, int interrupt)
 	state->ip = interrupt_table[interrupt];
 }
 
-void print_registers(cpu_state* state)
-{
+void print_registers(cpu_state* state) {
 	printf("zzz\n");
 	for (int i=0;i<PETUCHPC_REGISTER_COUNT;i++){
 		printf("r%.2d=0x%08X\n", i, state->r[i]);
 	}
 }
 
-bool skip_instr(cpu_state* state, uint8_t cond)
-{
+bool skip_instr(cpu_state* state, uint8_t cond) {
 	switch (cond){
 		case COND_ALWAYS: return false;
 		case COND_EQ: return !state->flags.zero;
@@ -163,8 +160,7 @@ bool skip_instr(cpu_state* state, uint8_t cond)
 	return true;
 }
 
-void cpu_execute(cpu_state* state)
-{
+void cpu_execute(cpu_state* state) {
 	if (state->halted) return;
 
 	uint16_t op = cpu_read16(state, state->ip);
@@ -393,9 +389,8 @@ void cpu_execute(cpu_state* state)
 
 			uint8_t src = GET_TYPE0_SRC(op);
 			uint8_t dest = GET_TYPE0_DEST(op);
-			//printf("Do: 0x%08X ", state->r[dest]);
+
 			state->r[dest] = state->r[dest] | state->r[src];
-			//printf("Posle: 0x%08X \r\n", state->r[dest]);
 
 			state->ip += 2;
 			break;
@@ -626,9 +621,6 @@ void cpu_execute(cpu_state* state)
 			uint8_t dest = GET_TYPE6_DEST(op);
 			uint8_t size = GET_TYPE6_SIZE(op);
 
-			//printf("Запись значения 0x%08X в 0x%08X\r\n", state->r[dest], state->r[src]);
-			//getc(stdin);
-
 			switch (size){
 				case BYTE: cpu_write8(state, state->r[src], (uint8_t)state->r[dest]); break;
 				case WORD: cpu_write16(state, state->r[src], (uint16_t)state->r[dest]); break;
@@ -661,9 +653,21 @@ void cpu_execute(cpu_state* state)
 			uint32_t value = 0;
 
 			switch (size){
-				case BYTE: value = (uint32_t)cpu_read8(state, state->ip+2); break;
-				case WORD: value = (uint32_t)cpu_read16(state, state->ip+2); break;
-				case DWORD: value = cpu_read32(state, state->ip+2); break;
+				case BYTE: {
+					value = (uint32_t)cpu_read8(state, state->ip + 2);
+					state->ip += 3;
+					break;
+				}
+				case WORD: { 
+					value = (uint32_t)cpu_read16(state, state->ip + 2);
+					state->ip += 4;
+					break;
+				}
+				case DWORD: { 
+					value = cpu_read32(state, state->ip + 2);
+					state->ip += 6;
+					break;
+				}
 			}
 
 			uint32_t x = state->r[dest] - value;
@@ -671,16 +675,13 @@ void cpu_execute(cpu_state* state)
 			state->flags.zero = (x == 0);
 			state->flags.negative = (x < 0);
 
-			state->ip += (2 + (pow(2, size)));
+			//state->ip += (2 + (pow(2, size)));
 			break;
 		}
 		case RET:{
 			CHECK_TYPE5_RESERVED(op);
 
 			POP(state->ip);
-
-			//printf("Return to 0x%08X\n\r", state->ip);
-
 			break;
 		}
 		case IRET: {
@@ -716,11 +717,7 @@ void cpu_execute(cpu_state* state)
 				case DWORD: value = cpu_read32(state, state->ip + 2); break;
 			}
 
-			//printf("До: 0x%08X ", state->r[dest]);
-
 			state->r[dest] <<= value;
-
-			//printf("После: 0x%08X \r\n", state->r[dest]);
 
 			state->ip += (2 + (pow(2, size)));
 			break;

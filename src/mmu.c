@@ -11,7 +11,7 @@ uint32_t mmu_virtual_to_physical(cpu_state* state, uint32_t virtual_address) {
 	uint16_t pte_index = (virtual_address & MMU_ADDR_PTE_MASK) >> 12;
 	uint16_t offset = virtual_address & MMU_ADDR_OFFSET_MASK;
 
-	uint32_t pd_entry = board_read32(state, state->pd + (pde_index * 4));
+	uint32_t pd_entry = board_read(state, state->pd + (pde_index * 4), 4);
 
 	if (!(pd_entry & MMU_PD_PRESENT_MASK)) {
 		fprintf(stderr, "MMU: PD: Страница недоступна (Виртуальный адрес: 0x%08X)\r\n", virtual_address);
@@ -23,7 +23,7 @@ uint32_t mmu_virtual_to_physical(cpu_state* state, uint32_t virtual_address) {
 
 	uint32_t page_table_addr = pd_entry & MMU_PD_ADDR_MASK;
 
-	uint32_t pt_entry = board_read32(state, page_table_addr + (pte_index * 4));
+	uint32_t pt_entry = board_read(state, page_table_addr + (pte_index * 4), 4);
 
 	if (!(pt_entry & MMU_PT_PRESENT_MASK)) {
 		fprintf(stderr, "MMU: PT: Страница недоступна (Виртуальный адрес: 0x%08X)\r\n", virtual_address);
@@ -47,7 +47,7 @@ void mmu_debug_print_page_directory(cpu_state* state) {
 	printf("MMU: Вывод содержимого страничной директории по адресу 0x%08X\r\n", entry_address);
 
 	for (int i = 0; i < 1024; i++) {
-		uint32_t entry = board_read32(state, entry_address);
+		uint32_t entry = board_read(state, entry_address, 4);
 
 		if (entry & MMU_PD_PRESENT_MASK) {
 			printf("MMU: PD: Запись %d: 0x%08X\r\n", i, entry & MMU_PD_ADDR_MASK);
@@ -55,7 +55,7 @@ void mmu_debug_print_page_directory(cpu_state* state) {
 			uint32_t pt_entry_address = entry & MMU_PD_ADDR_MASK;
 
 			for (int j = 0; j < 1024; j++) {
-				uint32_t pt_entry = board_read32(state, pt_entry_address);
+				uint32_t pt_entry = board_read(state, pt_entry_address, 4);
 
 				if (pt_entry & MMU_PT_PRESENT_MASK) {
 					printf("MMU: PT:	Запись %d: 0x%08X\r\n", j, pt_entry & MMU_PT_ADDR_MASK);

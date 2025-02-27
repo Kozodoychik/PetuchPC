@@ -65,12 +65,6 @@ typedef struct {
 
 typedef struct {
 
-	bool ram_dump_on_halt;
-
-} cpu_emulation_settings;
-
-typedef struct {
-
 	uint32_t r[PETUCHPC_REGISTER_COUNT];	// Регистры общего назначения
 	uint32_t ip;							// Указатель инструкции
 	uint32_t sp;							// Указатель стека
@@ -84,8 +78,6 @@ typedef struct {
 
 	uint8_t ram[PETUCHPC_RAM_SIZE];			// ОЗУ
 	uint8_t rom[PETUCHPC_ROM_SIZE];			// ПЗУ
-
-	cpu_emulation_settings settings;
 
 } cpu_state;
 

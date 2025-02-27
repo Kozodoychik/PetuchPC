@@ -67,8 +67,8 @@ void keyboard_init(cpu_state* _state) {
 
 	memset(keyboard_buffer, 0, sizeof(char));
 
-	mmio_ports[KEYBOARD_MMIO_BASE].port_read_handler = keyboard_port_read;
-	mmio_ports[KEYBOARD_MMIO_BASE].port_write_handler = keyboard_port_write;
+	mmio_ports[KEYBOARD_MMIO_BASE].read = keyboard_port_read;
+	mmio_ports[KEYBOARD_MMIO_BASE].write = keyboard_port_write;
 
 	state = _state;
 }
@@ -79,7 +79,8 @@ void keyboard_handle_event(SDL_KeyboardEvent* event) {
 		keyboard_buffer[keyboard_buffer_pointer] = ps2_scancodes[event->keysym.scancode];
 		keyboard_buffer_pointer++;
 
-		printf("Клавиатура: Получен сканкод: 0x%02X\r\n", ps2_scancodes[event->keysym.scancode]);
+		// Исключительно для отладки
+		//printf("Клавиатура: Получен сканкод: 0x%02X\r\n", ps2_scancodes[event->keysym.scancode]);
 	}
 	else {
 		printf("ПРЕДУПРЕЖДЕНИЕ: Клавиатура: Переполнение внутреннего буфера, игнорирование 0x%02X\r\n", ps2_scancodes[event->keysym.scancode]);
@@ -91,6 +92,7 @@ void keyboard_handle_event(SDL_KeyboardEvent* event) {
 
 uint8_t keyboard_port_read(cpu_state* state) {
 	uint8_t data = keyboard_buffer[0];
+	if (!data) return 0;
 
 	memcpy(keyboard_buffer, keyboard_buffer + 1, 15);
 	keyboard_buffer[15] = 0;
