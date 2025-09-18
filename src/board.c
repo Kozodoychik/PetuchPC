@@ -26,21 +26,19 @@ uint32_t board_read(cpu_state* state, uint32_t physical_address, int length) {
 	}
 	uint32_t value = 0;
 
-	for (int i = 0;i < length;i++) {
-		if (physical_address + i < PETUCHPC_RAM_SIZE)
-			value |= state->ram[physical_address + i] << (8 * i);
-		else if (physical_address + i >= PETUCHPC_ROM_BASE && physical_address + i < PETUCHPC_ROM_BASE + PETUCHPC_ROM_SIZE)
-			value |= state->rom[(physical_address + i) - PETUCHPC_ROM_BASE] << (8 * i);
-		else if (physical_address + i >= DISPLAY_FRAMEBUFFER_BASE && physical_address + i < DISPLAY_FRAMEBUFFER_BASE + DISPLAY_FRAMEBUFFER_LEN)
-			value |= framebuffer[(physical_address + i) - DISPLAY_FRAMEBUFFER_BASE] << (8 * i);
-		else if (physical_address >= MMIO_BASE && physical_address < MMIO_END) {
-			uint8_t port = (uint8_t)(physical_address & 0xff);
-			value |= mmio_ports[port].read(state) << 24;
-		}
-		else {
-			fprintf(stderr, "ПРЕДУПРЕЖДЕНИЕ: Недопустимое чтение: 0x%08x\n", physical_address + i);
-		}
+	// Адовая попытка оптимизации
+
+	if (physical_address < PETUCHPC_RAM_SIZE)
+		value = *(uint32_t*)&state->ram[physical_address];
+	else if (physical_address >= PETUCHPC_ROM_BASE && physical_address < PETUCHPC_ROM_BASE + PETUCHPC_ROM_SIZE)
+		value = *(uint32_t*)&state->rom[physical_address & 0x0fffffff];
+	else if (physical_address >= DISPLAY_FRAMEBUFFER_BASE && physical_address < DISPLAY_FRAMEBUFFER_BASE + DISPLAY_FRAMEBUFFER_LEN)
+		value = *(uint32_t*)&framebuffer[physical_address - DISPLAY_FRAMEBUFFER_BASE];
+	else if (physical_address >= MMIO_BASE && physical_address < MMIO_END) {
+		uint8_t port = (uint8_t)(physical_address & 0xff);
+		value |= mmio_ports[port].read(state) << 24;
 	}
+
 	return value;
 }
 
@@ -51,6 +49,7 @@ void board_write(cpu_state* state, uint32_t physical_address, int length, uint32
 	}
 
 	for (int i = 0;i < length;i++) {
+		//printf("len=%d\n", length);
 		if (physical_address + i < PETUCHPC_RAM_SIZE)
 			state->ram[physical_address + i] = value & 0xff;
 		else if (physical_address + i >= DISPLAY_FRAMEBUFFER_BASE && physical_address + i < DISPLAY_FRAMEBUFFER_BASE + DISPLAY_FRAMEBUFFER_LEN)

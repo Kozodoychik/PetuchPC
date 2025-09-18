@@ -25,8 +25,7 @@ void main_loop(cpu_state* state) {
 
 		int cpt = 33000000 / 60 / delta_time;
 		int extra_cycles = 33000000 / 60 - (cpt * delta_time);
-
-		int tick = SDL_GetTicks();
+		//printf("%d\n", extra_cycles);
 
 		for (int i = 0;i < delta_time;i++) {
 			int cycles_left = cpt;
@@ -38,10 +37,12 @@ void main_loop(cpu_state* state) {
 				cycles_left--;
 			}
 		}
-		int t = SDL_GetTicks() - tick;
-
+		
+		int tick = SDL_GetTicks();
 		int status = display_update();
 		if (status) break;
+		int t = SDL_GetTicks() - tick;
+		//printf("display_update took: %d\n", t);
 	}
 }
 int load_rom(cpu_state*, char*);
@@ -55,12 +56,12 @@ int main(int argc, char* argv[]) {
 
 	if (argc > 1) {
 		for (int i=1;i<argc;i++) {
-			if (strcmp(argv[i], "-h") == 0) {
+			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
 				fprintf(stderr, "Использование: %s [параметры]\n"
 						"Параметры:\n"
-						"  -h					Вывод данного сообщения.\n"
-						"  -rom [файл]				Использование образа ПЗУ.\n"
-						"  -d					Дамп ОЗУ при выходе", argv[0]);
+						"  -h, --help				Вывод данного сообщения.\n"
+						"  -rom файл  				Использование образа ПЗУ.\n"
+						"  -d					Дамп ОЗУ при выходе.\n", argv[0]);
 				return 0;
 			}
 			else if (strcmp(argv[i], "-rom") == 0) {
@@ -118,7 +119,7 @@ int load_rom(cpu_state* state, char* file) {
 		fprintf(stderr, "ОШИБКА: Невозможно открыть образ ПЗУ: %s\n", file);
 		return 1;
 	}
-	fread(&state->rom, 1, PETUCHPC_ROM_SIZE, rom);
+	fread(state->rom, 1, PETUCHPC_ROM_SIZE, rom);
 	fclose(rom);
 
 	/*

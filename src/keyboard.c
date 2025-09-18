@@ -83,7 +83,7 @@ void keyboard_handle_event(SDL_KeyboardEvent* event) {
 		//printf("Клавиатура: Получен сканкод: 0x%02X\r\n", ps2_scancodes[event->keysym.scancode]);
 	}
 	else {
-		printf("ПРЕДУПРЕЖДЕНИЕ: Клавиатура: Переполнение внутреннего буфера, игнорирование 0x%02X\r\n", ps2_scancodes[event->keysym.scancode]);
+		printf("ПРЕДУПРЕЖДЕНИЕ: Клавиатура: Переполнение внутреннего буфера, игнорирование 0x%02X\n", ps2_scancodes[event->keysym.scancode]);
 	}
 
 	if (use_irq)

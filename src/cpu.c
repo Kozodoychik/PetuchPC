@@ -3,8 +3,8 @@
 #include "mmu.h"
 
 #include <stdio.h>
-#include <math.h>
 #include <string.h>
+#include <malloc.h>
 
 void cpu_reset(cpu_state* state) {
 	// Инициализируем память, регистры и устанавливаем значения по умолчанию для ip, sp и it
@@ -135,7 +135,7 @@ void cpu_interrupt(cpu_state* state, int interrupt) {
 	PUSH((uint8_t)interrupt);
 
 	if (interrupt_table[interrupt] == 0)
-		fprintf(stderr, "ПРЕДУПРЕЖДЕНИЕ: Необрабатываемое прерывание 0x%X\n", interrupt);
+		fprintf(stderr, "ПРЕДУПРЕЖДЕНИЕ: CPU: Необрабатываемое прерывание 0x%X\n", interrupt);
 
 	state->ip = interrupt_table[interrupt];
 }
@@ -156,7 +156,7 @@ bool skip_instr(cpu_state* state, uint8_t cond) {
 		case COND_L: return !state->flags.negative;
 	}
 
-	fprintf(stderr, "ПРЕДУПРЕЖДЕНИЕ: Некорректное условие: 0x%x\n", cond);
+	fprintf(stderr, "ПРЕДУПРЕЖДЕНИЕ: CPU: Некорректное условие: 0x%x\n", cond);
 	return true;
 }
 
@@ -608,8 +608,8 @@ void cpu_execute(cpu_state* state) {
 			uint32_t ptr = cpu_read32(state, state->ip+2);
 
 			switch (size){
-				case BYTE: cpu_write8(state, ptr, state->r[src]); break;
-				case WORD: cpu_write16(state, ptr, state->r[src]); break;
+				case BYTE: cpu_write8(state, ptr, (uint8_t)state->r[src]); break;
+				case WORD: cpu_write16(state, ptr, (uint16_t)state->r[src]); break;
 				case DWORD: cpu_write32(state, ptr, state->r[src]); break;
 			}
 
@@ -636,7 +636,7 @@ void cpu_execute(cpu_state* state) {
 			uint8_t src = GET_TYPE0_SRC(op);
 			uint8_t dest = GET_TYPE0_DEST(op);
 
-			uint32_t x = state->r[dest] - state->r[src];
+			int32_t x = state->r[dest] - state->r[src];
 
 			state->flags.zero = (x == 0);
 			state->flags.negative = (x < 0);
@@ -670,7 +670,7 @@ void cpu_execute(cpu_state* state) {
 				}
 			}
 
-			uint32_t x = state->r[dest] - value;
+			int32_t x = state->r[dest] - value;
 
 			state->flags.zero = (x == 0);
 			state->flags.negative = (x < 0);
@@ -699,7 +699,7 @@ void cpu_execute(cpu_state* state) {
 		case HLT:{
 			CHECK_TYPE5_RESERVED(op);
 
-			printf("ИНФО: Остановка (инструкция HLT)\n");
+			printf("ИНФО: CPU: Остановка (инструкция HLT)\n");
 			state->halted = true;
 			break;
 		}
@@ -719,7 +719,7 @@ void cpu_execute(cpu_state* state) {
 
 			state->r[dest] <<= value;
 
-			state->ip += (2 + (pow(2, size)));
+			state->ip += (2 + (1 << size));
 			break;
 		}
 		case SHR: {
@@ -738,7 +738,7 @@ void cpu_execute(cpu_state* state) {
 
 			state->r[dest] >>= value;
 
-			state->ip += (2 + (pow(2, size)));
+			state->ip += (2 + (1 << size));
 			break;
 		}
 		case LDSP: {
@@ -787,7 +787,7 @@ void cpu_execute(cpu_state* state) {
 			uint8_t src = GET_TYPE4_DEST(op);
 
 			state->msr = state->r[src];
-			printf("ИНФО: MSR перезаписан: 0x%08X\r\n", state->msr);
+			printf("ИНФО: CPU: MSR перезаписан: 0x%08X\r\n", state->msr);
 
 			// Для отладки, в будущем будет удалено
 			//if (state->msr & PETUCHPC_MSR_MMU_MASK) {

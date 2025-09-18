@@ -199,10 +199,15 @@ void display_command_port_write(cpu_state* state, uint8_t command) {
         switch (mode) {
             case 0: {
                 SDL_SetWindowSize(display_window, 640, 400);
+                printf("ИНФО: Графика: Установлен текстовый режим (80x25 символов)\n");
+                break;
             }
             case 1: {
                 SDL_SetWindowSize(display_window, 640, 480);
+                printf("ИНФО: Графика: Установлен графический режим (640x480 пикселей, 32 бита)\n");
+                break;
             }
         }
+        SDL_RenderSetViewport(display_renderer, &display_rect);
     }
 }
